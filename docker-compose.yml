@@ -14,7 +14,7 @@ services:
   # Application Services
   # ==============================================
   api: &api
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-latest}
+    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-v2.1.28}
     container_name: aperag-api
     depends_on:
       redis:
@@ -56,7 +56,7 @@ services:
       start_period: 30s
 
   frontend:
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise-frontend:${VERSION:-latest}
+    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise-frontend:${VERSION:-v2.1.28}
     container_name: aperag-frontend
     depends_on:
       api:
@@ -85,7 +85,7 @@ services:
     restart: on-failure
 
   indexing-worker:
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-latest}
+    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-v2.1.28}
     container_name: aperag-indexing-worker
     depends_on:
       redis:
