@@ -49,18 +49,16 @@ cp envs/env.template .env
 
 **2.2 编辑 `.env`，填写必填项**
 
+`.env` 中只有一项必填：
+
 ```bash
 # JWT 密钥（必填，生成命令：openssl rand -hex 32）
 JWT_SECRET=
-
-# 阿里云百炼 API Key（用于 embedding）
-DASHSCOPE_API_KEY=sk-xxxx
-
-# OpenRouter API Key（用于 LLM 对话）
-OPENROUTER_API_KEY=sk-or-v1-xxxx
 ```
 
 > ⚠️ `.env` 文件包含密钥，请勿提交到任何代码仓库。
+
+> **AI Provider API Key 不在此处配置**：DASHSCOPE / OpenRouter 等 API Key 是 AI 模型调用凭据，**不属于基础设施配置**，不需要写入 `.env`。系统启动后，在管理员页面配置 Provider 即可（见第五步）。
 
 **2.3 代理环境配置（可选）**
 
@@ -118,21 +116,42 @@ aperag-es                Up X minutes (healthy)
 
 ## 第五步：初始化系统（⚠️ 仅首次部署执行一次）
 
+### 5.1 创建管理员账号（必须）
+
 ```bash
 # 安装依赖
 pip3 install requests
 
-# 加载环境变量
-set -a && source .env && set +a
-
-# 设置管理员密码
+# 设置管理员密码（自定义，与 .env 无关）
 export APERAG_ADMIN_PASSWORD=自定义管理员密码
 
-# 运行初始化脚本
+# 运行初始化脚本（仅创建管理员账号）
 python3 scripts/init-local-demo.py
 ```
 
-脚本将自动创建管理员账号、AI 模型配置（dashscope + openrouter）。
+这一步只会创建管理员账号。脚本是幂等的，重复运行无副作用。
+
+### 5.2 配置 AI Provider（可选）
+
+> **可以跳过此步骤**。Provider 配置可以在系统启动后通过管理员页面手动完成，无需在命令行操作。
+
+**方式 A（推荐）：登录管理员页面手动配置**
+
+访问 `http://服务器IP:3000` → 登录 admin → 进入「管理员」→「模型配置」→ 添加 Provider 和模型。
+
+**方式 B：脚本批量初始化（适合快速 POC）**
+
+如果你有 DASHSCOPE（阿里云百炼）和 OpenRouter 的 API Key，可以用脚本一次性创建常用模型配置：
+
+```bash
+DASHSCOPE_API_KEY=sk-xxxx \
+OPENROUTER_API_KEY=sk-or-v1-xxxx \
+python3 scripts/init-local-demo.py
+```
+
+脚本会创建：embedding 模型（text-embedding-v4）、多个 LLM（DeepSeek / GPT / Claude / Kimi / Qwen 等）、以及 agent_chat / collection_completion 等场景绑定。
+
+> **如果你使用其他 Provider**（如自建 OpenAI-compatible 服务、Azure、其他国内模型），请直接通过管理员页面配置，脚本默认只覆盖 dashscope + openrouter。
 
 ---
 
@@ -151,7 +170,9 @@ hostname -I
 
 **登录：**
 - 用户名：`admin`
-- 密码：第五步设置的 `APERAG_ADMIN_PASSWORD`
+- 密码：第五步 5.1 中设置的 `APERAG_ADMIN_PASSWORD`
+
+> **AI Provider 配置**：首次登录后，在「管理员」→「模型配置」页面添加你使用的 AI 服务商（支持阿里云百炼、OpenRouter、Azure OpenAI、自建 OpenAI-compatible 服务等），配置完成后即可创建知识库和使用对话功能。
 
 ---
 
