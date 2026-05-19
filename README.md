@@ -114,44 +114,34 @@ aperag-es                Up X minutes (healthy)
 
 ---
 
-## 第五步：初始化系统（⚠️ 仅首次部署执行一次）
+## 第五步：初始化（可选）
 
-### 5.1 创建管理员账号（必须）
+> **这一步完全可以跳过。** 系统启动后，在页面注册的**第一个账号**即为管理员账号；AI Provider 也可以在管理员页面手动配置。以下脚本仅供希望快速批量初始化的场景使用。
+
+### 脚本批量初始化（适合快速 POC）
+
+> ⚠️ **脚本需要 Python ≥ 3.7**。可以先检查版本：`python3 --version`。
+> 如果版本是 3.6 或更低，请直接跳过此步骤，用浏览器访问系统后在管理员页面手动完成配置即可。
+
+如果你有 DASHSCOPE（阿里云百炼）和 OpenRouter 的 API Key，可以用脚本一次性完成：管理员账号创建 + 常用模型配置（embedding、LLM、场景绑定）：
 
 ```bash
+# 检查 Python 版本（需要 3.7+）
+python3 --version
+
 # 安装依赖
 pip3 install requests
 
-# 设置管理员密码（自定义，与 .env 无关）
-export APERAG_ADMIN_PASSWORD=自定义管理员密码
-
-# 运行初始化脚本（仅创建管理员账号）
-python3 scripts/init-local-demo.py
-```
-
-这一步只会创建管理员账号。脚本是幂等的，重复运行无副作用。
-
-### 5.2 配置 AI Provider（可选）
-
-> **可以跳过此步骤**。Provider 配置可以在系统启动后通过管理员页面手动完成，无需在命令行操作。
-
-**方式 A（推荐）：登录管理员页面手动配置**
-
-访问 `http://服务器IP:3000` → 登录 admin → 进入「管理员」→「模型配置」→ 添加 Provider 和模型。
-
-**方式 B：脚本批量初始化（适合快速 POC）**
-
-如果你有 DASHSCOPE（阿里云百炼）和 OpenRouter 的 API Key，可以用脚本一次性创建常用模型配置：
-
-```bash
+# 运行初始化脚本
+APERAG_ADMIN_PASSWORD=自定义管理员密码 \
 DASHSCOPE_API_KEY=sk-xxxx \
 OPENROUTER_API_KEY=sk-or-v1-xxxx \
 python3 scripts/init-local-demo.py
 ```
 
-脚本会创建：embedding 模型（text-embedding-v4）、多个 LLM（DeepSeek / GPT / Claude / Kimi / Qwen 等）、以及 agent_chat / collection_completion 等场景绑定。
+脚本会创建：管理员账号、embedding 模型（text-embedding-v4）、多个 LLM（DeepSeek / GPT / Claude / Kimi / Qwen 等）、以及 agent_chat / collection_completion 等场景绑定。脚本是幂等的，重复运行无副作用。
 
-> **如果你使用其他 Provider**（如自建 OpenAI-compatible 服务、Azure、其他国内模型），请直接通过管理员页面配置，脚本默认只覆盖 dashscope + openrouter。
+> **使用其他 Provider**（如自建 OpenAI-compatible 服务、Azure、其他国内模型）：跳过脚本，直接登录后在「管理员」→「模型配置」页面手动添加即可。
 
 ---
 
@@ -168,9 +158,10 @@ python3 scripts/init-local-demo.py
 hostname -I
 ```
 
-**登录：**
-- 用户名：`admin`
-- 密码：第五步 5.1 中设置的 `APERAG_ADMIN_PASSWORD`
+**账号：**
+
+- 如果跑了第五步脚本：用户名 `admin`，密码为脚本中设置的 `APERAG_ADMIN_PASSWORD`
+- 如果跳过了第五步：在页面直接注册，**第一个注册的账号即为管理员账号**
 
 > **AI Provider 配置**：首次登录后，在「管理员」→「模型配置」页面添加你使用的 AI 服务商（支持阿里云百炼、OpenRouter、Azure OpenAI、自建 OpenAI-compatible 服务等），配置完成后即可创建知识库和使用对话功能。
 
