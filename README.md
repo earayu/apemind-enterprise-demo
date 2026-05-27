@@ -73,10 +73,10 @@ no_proxy=localhost,127.0.0.1,::1
 
 **2.4 指定版本（可选）**
 
-默认使用 `v2.1.28`。如需切换版本，在启动命令前设置：
+默认使用 `v2.2.16`。如需切换版本，在启动命令前设置：
 
 ```bash
-export VERSION=v2.1.28
+export VERSION=v2.2.16
 ```
 
 ---
@@ -102,14 +102,14 @@ docker compose ps
 正常状态（启动约 2-3 分钟后）：
 
 ```
-aperag-api               Up X minutes (healthy)
-aperag-frontend          Up X minutes
-aperag-nginx             Up X minutes
-aperag-indexing-worker   Up X minutes
-aperag-postgres          Up X minutes (healthy)
-aperag-redis             Up X minutes (healthy)
-aperag-qdrant            Up X minutes (healthy)
-aperag-es                Up X minutes (healthy)
+apemind-api               Up X minutes (healthy)
+apemind-frontend          Up X minutes
+apemind-nginx             Up X minutes
+apemind-indexing-worker   Up X minutes
+apemind-postgres          Up X minutes (healthy)
+apemind-redis             Up X minutes (healthy)
+apemind-qdrant            Up X minutes (healthy)
+apemind-es                Up X minutes (healthy)
 ```
 
 ---
@@ -174,8 +174,8 @@ hostname -I
 docker compose ps
 
 # 查看日志
-docker compose logs -f api
-docker compose logs -f indexing-worker
+docker compose logs -f api          # apemind-api
+docker compose logs -f indexing-worker  # apemind-indexing-worker
 
 # 停止（保留数据）
 docker compose down
@@ -183,9 +183,9 @@ docker compose down
 # 重启
 docker compose down && docker compose up -d
 
-# 更新版本
+# 更新版本（示例升级到 v2.2.16）
 git pull
-export VERSION=新版本号
+export VERSION=v2.2.16
 docker compose pull
 docker compose down && docker compose up -d
 ```
@@ -198,14 +198,14 @@ docker compose down && docker compose up -d
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| nginx | 3000 | 统一接入层（/api/* → api，/* → frontend） |
-| api | 8000 | 后端 API（内部端口） |
-| frontend | 3000（内部） | 前端（由 nginx 代理） |
-| indexing-worker | — | 文档解析 / 向量化 / 图索引 |
-| postgres | 127.0.0.1:5432 | 元数据 + 图数据（复用同一实例） |
-| redis | 127.0.0.1:6379 | 队列 / 缓存 / 配额 |
-| qdrant | 127.0.0.1:6333 | 向量数据库 |
-| es | 127.0.0.1:9200 | 全文检索 |
+| apemind-nginx | 3000 | 统一接入层（/api/* → api，/* → frontend） |
+| apemind-api | 8000 | 后端 API（内部端口） |
+| apemind-frontend | 3000（内部） | 前端（由 nginx 代理） |
+| apemind-indexing-worker | — | 文档解析 / 向量化 / 图索引 |
+| apemind-postgres | 127.0.0.1:5432 | 元数据 + 图数据（复用同一实例） |
+| apemind-redis | 127.0.0.1:6379 | 队列 / 缓存 / 配额 |
+| apemind-qdrant | 127.0.0.1:6333 | 向量数据库 |
+| apemind-es | 127.0.0.1:9200 | 全文检索 |
 
 **对象存储**：默认使用容器内共享卷（`aperag-shared-data:/shared`），无需额外配置 MinIO/S3。
 
