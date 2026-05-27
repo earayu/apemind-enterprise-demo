@@ -1,21 +1,21 @@
 volumes:
-  aperag-postgres-data: {}
-  aperag-qdrant-data: {}
-  aperag-redis-data: {}
-  aperag-es-data: {}
-  aperag-neo4j-data: {}
-  aperag-nebula-meta-data: {}
-  aperag-nebula-storage-data: {}
-  aperag-nebula-logs: {}
-  aperag-shared-data: {}
+  apemind-postgres-data: {}
+  apemind-qdrant-data: {}
+  apemind-redis-data: {}
+  apemind-es-data: {}
+  apemind-neo4j-data: {}
+  apemind-nebula-meta-data: {}
+  apemind-nebula-storage-data: {}
+  apemind-nebula-logs: {}
+  apemind-shared-data: {}
 
 services:
   # ==============================================
   # Application Services
   # ==============================================
   api: &api
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-v2.2.2}
-    container_name: aperag-api
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.16}
+    container_name: apemind-api
     depends_on:
       redis:
         condition: service_healthy
@@ -34,10 +34,10 @@ services:
       # neo4j uses required:false so the dependency activates only when
       # the neo4j profile is enabled. Without it, the api can start before
       # neo4j is reachable and the first /graphs call fails with
-      # ServiceUnavailable: DNS resolve aperag-neo4j:7687.
+      # ServiceUnavailable: DNS resolve apemind-neo4j:7687.
     volumes:
       - ~/.cache:/root/.cache
-      - aperag-shared-data:/shared
+      - apemind-shared-data:/shared
     env_file:
       - .env
       - envs/docker.env.overrides
@@ -49,15 +49,15 @@ services:
         hard: 65535
     command: ["/app/scripts/entrypoint.sh", "/app/scripts/start-api.sh"]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || curl -f http://localhost:8000/docs || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ready || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12  # 12 * 10s = 120s (2 minutes)
-      start_period: 30s
+      start_period: 60s  # Give API time to run migrations before first check
 
   frontend:
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise-frontend:${VERSION:-v2.2.2}
-    container_name: aperag-frontend
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.2.16}
+    container_name: apemind-frontend
     depends_on:
       api:
         condition: service_healthy
@@ -74,7 +74,7 @@ services:
   # - /*     → 转发到 frontend:3000（UI / SSR）
   nginx:
     image: nginx:alpine
-    container_name: aperag-nginx
+    container_name: apemind-nginx
     depends_on:
       - frontend
       - api
@@ -85,8 +85,8 @@ services:
     restart: on-failure
 
   indexing-worker:
-    image: ${REGISTRY:-docker.io}/apecloud/aperag-enterprise:${VERSION:-v2.2.2}
-    container_name: aperag-indexing-worker
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.16}
+    container_name: apemind-indexing-worker
     depends_on:
       redis:
         condition: service_healthy
@@ -99,17 +99,14 @@ services:
         required: false
     volumes:
       - ~/.cache:/root/.cache
-      - aperag-shared-data:/shared
+      - apemind-shared-data:/shared
     env_file:
       - .env
       - envs/docker.env.overrides
     environment:
       - DB_POOL_SIZE=10
       - DB_POOL_MAX_OVERFLOW=10
-      # ApeRAG agent runtime 调用内部 MCP server 的地址。
-      # 默认值 localhost:8000 在 indexing-worker 容器内找不到 api，
-      # 必须用 docker service name 显式指定，否则 agent chat 报 ConnectError。
-      - APERAG_MCP_URL=http://api:8000/mcp/
+      - APEMIND_MCP_URL=http://api:8000/mcp/
     ulimits:
       nofile:
         soft: 65535
@@ -122,9 +119,9 @@ services:
   # ==============================================
   postgres:
     image: ${REGISTRY:-docker.io}/apecloud/pgvector:pg16
-    container_name: aperag-postgres
+    container_name: apemind-postgres
     volumes:
-      - aperag-postgres-data:/var/lib/postgresql/data
+      - apemind-postgres-data:/var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     environment:
@@ -139,10 +136,10 @@ services:
       start_period: 10s
 
   redis:
-    image: ${REGISTRY:-docker.io}/library/redis:7.2.4
-    container_name: aperag-redis
+    image: ${REGISTRY:-docker.io}/library/redis:7.4.7
+    container_name: apemind-redis
     volumes:
-      - aperag-redis-data:/data
+      - apemind-redis-data:/data
     ports:
       - "127.0.0.1:6379:6379"
     healthcheck:
@@ -154,9 +151,9 @@ services:
 
   qdrant:
     image: ${REGISTRY:-docker.io}/qdrant/qdrant:v1.15.4
-    container_name: aperag-qdrant
+    container_name: apemind-qdrant
     volumes:
-      - aperag-qdrant-data:/qdrant/storage
+      - apemind-qdrant-data:/qdrant/storage
     ports:
       - "127.0.0.1:6333:6333"
     healthcheck:
@@ -168,7 +165,7 @@ services:
 
   es:
     image: ${REGISTRY:-docker.io}/apecloud/elasticsearch:8.8.2
-    container_name: aperag-es
+    container_name: apemind-es
     ports:
       - "127.0.0.1:9200:9200"
     environment:
@@ -178,7 +175,7 @@ services:
       - "ES_REQUIRE_IK_PLUGIN=false"
       - "ES_AUTO_INSTALL_IK=false"
     volumes:
-      - aperag-es-data:/usr/share/elasticsearch/data
+      - apemind-es-data:/usr/share/elasticsearch/data
       - ./scripts/init-es.sh:/usr/share/elasticsearch/bin/init-es.sh
     healthcheck:
       test: ["CMD-SHELL", "bash /usr/share/elasticsearch/bin/init-es.sh check"]
@@ -194,7 +191,7 @@ services:
   # ==============================================
   neo4j:
     image: neo4j:5.26.5-enterprise
-    container_name: aperag-neo4j
+    container_name: apemind-neo4j
     ports:
       - "7474:7474"  # HTTP
       - "7687:7687"  # Bolt
@@ -204,7 +201,7 @@ services:
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
       - NEO4J_apoc_export_file_enabled=true
     volumes:
-      - aperag-neo4j-data:/data
+      - apemind-neo4j-data:/data
     healthcheck:
       test: ["CMD-SHELL", "cypher-shell -u neo4j -p password 'RETURN 1' || exit 1"]
       interval: 10s
@@ -215,7 +212,7 @@ services:
 
   nebula-metad:
     image: vesoft/nebula-metad:v3.8.0
-    container_name: aperag-nebula-metad
+    container_name: apemind-nebula-metad
     command:
       - --meta_server_addrs=nebula-metad:9559
       - --local_ip=nebula-metad
@@ -237,14 +234,14 @@ services:
       - "9559:9559"
       - "19559:19559"
     volumes:
-      - aperag-nebula-meta-data:/data/meta
-      - aperag-nebula-logs:/logs
+      - apemind-nebula-meta-data:/data/meta
+      - apemind-nebula-logs:/logs
     restart: on-failure
     profiles: ["nebula"]
 
   nebula-storaged:
     image: vesoft/nebula-storaged:v3.8.0
-    container_name: aperag-nebula-storaged
+    container_name: apemind-nebula-storaged
     command:
       - --meta_server_addrs=nebula-metad:9559
       - --local_ip=nebula-storaged
@@ -268,14 +265,14 @@ services:
       - "9779:9779"
       - "19779:19779"
     volumes:
-      - aperag-nebula-storage-data:/data/storage
-      - aperag-nebula-logs:/logs
+      - apemind-nebula-storage-data:/data/storage
+      - apemind-nebula-logs:/logs
     restart: on-failure
     profiles: ["nebula"]
 
   nebula-graphd:
     image: vesoft/nebula-graphd:v3.8.0
-    container_name: aperag-nebula-graphd
+    container_name: apemind-nebula-graphd
     command:
       - --meta_server_addrs=nebula-metad:9559
       - --port=9669
@@ -298,13 +295,13 @@ services:
       - "9669:9669"
       - "19669:19669"
     volumes:
-      - aperag-nebula-logs:/logs
+      - apemind-nebula-logs:/logs
     restart: on-failure
     profiles: ["nebula"]
 
   nebula-storage-activator:
     image: vesoft/nebula-console:v3.8.0
-    container_name: aperag-nebula-storage-activator
+    container_name: apemind-nebula-storage-activator
     entrypoint: ""
     environment:
       - ACTIVATOR_RETRY=${ACTIVATOR_RETRY:-30}
