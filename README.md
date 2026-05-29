@@ -183,16 +183,12 @@ docker compose down
 # 重启
 docker compose down && docker compose up -d
 
-# 更新版本（示例升级到 v2.2.20）
+# 更新配置/版本（docker-compose.yml、nginx.conf、脚本等所有变更都靠 git pull 落地）
 git pull
-export VERSION=v2.2.20
-# 显式拉取最新 digest（同名 tag 可能已重新构建，需强制拉取）
-docker compose pull frontend api indexing-worker es
+# 可选：仅当本地镜像版本低于目标版本时才需要；已在目标版本可跳过
+docker compose pull
+# 全量重建：docker-compose.yml 变更（restart 策略等）+ volume-mount 文件（nginx.conf、init-es.sh）全部生效
 docker compose up -d --force-recreate
-
-# 仅更新配置文件（nginx.conf 等挂载文件变更，不需要重拉镜像）
-git pull
-docker compose up -d --force-recreate nginx
 ```
 
 > ⚠️ 升级后如遇界面语言显示异常，清除浏览器缓存中的 `locale` cookie（或 F12 → Application → Clear site data）后刷新即可。
