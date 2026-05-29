@@ -186,9 +186,13 @@ docker compose down && docker compose up -d
 # 更新版本（示例升级到 v2.2.20）
 git pull
 export VERSION=v2.2.20
-docker compose pull
-docker compose down && docker compose up -d
+# 显式拉取最新 digest（同名 tag 可能已重新构建，需强制拉取）
+docker compose pull frontend api indexing-worker es
+# force-recreate 确保 nginx.conf 变更和新镜像都生效
+docker compose up -d --force-recreate
 ```
+
+> ⚠️ 升级后如遇界面语言显示异常，清除浏览器缓存中的 `locale` cookie（或 F12 → Application → Clear site data）后刷新即可。
 
 > ⚠️ 大版本升级前请查阅 release note，可能包含数据库迁移步骤。
 
