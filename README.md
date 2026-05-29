@@ -188,8 +188,11 @@ git pull
 export VERSION=v2.2.20
 # 显式拉取最新 digest（同名 tag 可能已重新构建，需强制拉取）
 docker compose pull frontend api indexing-worker es
-# force-recreate 确保 nginx.conf 变更和新镜像都生效
 docker compose up -d --force-recreate
+
+# 仅更新配置文件（nginx.conf 等挂载文件变更，不需要重拉镜像）
+git pull
+docker compose up -d --force-recreate nginx
 ```
 
 > ⚠️ 升级后如遇界面语言显示异常，清除浏览器缓存中的 `locale` cookie（或 F12 → Application → Clear site data）后刷新即可。
