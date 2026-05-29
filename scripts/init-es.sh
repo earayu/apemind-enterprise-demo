@@ -5,9 +5,15 @@ is_healthy() {
     curl -s -X GET "http://localhost:9200/_cluster/health" | grep -q "green\|yellow"
 }
 
-# Function to check if IK Analyzer is installed
+# Function to check if IK Analyzer is installed and functional
 ik_plugin_installed() {
     [ -d "/usr/share/elasticsearch/plugins/analysis-ik" ]
+}
+
+ik_plugin_ready() {
+    curl -s -X POST "http://localhost:9200/_analyze" \
+        -H "Content-Type: application/json" \
+        -d '{"analyzer":"ik_max_word","text":"测试"}' 2>/dev/null | grep -q "tokens"
 }
 
 require_ik_plugin() {
@@ -22,9 +28,15 @@ auto_install_ik_plugin() {
 check_ready() {
     is_healthy || return 1
 
-    if require_ik_plugin && ! ik_plugin_installed; then
-        echo "IK Analyzer is required but not installed"
-        return 1
+    if require_ik_plugin; then
+        if ! ik_plugin_installed; then
+            echo "IK Analyzer is required but not installed"
+            return 1
+        fi
+        if ! ik_plugin_ready; then
+            echo "IK Analyzer installed but not yet functional"
+            return 1
+        fi
     fi
 
     return 0

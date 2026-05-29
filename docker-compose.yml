@@ -48,6 +48,7 @@ services:
         soft: 65535
         hard: 65535
     command: ["/app/scripts/entrypoint.sh", "/app/scripts/start-api.sh"]
+    restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ready || exit 1"]
       interval: 10s
@@ -183,7 +184,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12  # 12 * 10s = 120s (2 minutes)
-      start_period: 10s
+      start_period: 30s  # Extra buffer for IK plugin download on first boot
     command: bash /usr/share/elasticsearch/bin/init-es.sh
     restart: on-failure
 
