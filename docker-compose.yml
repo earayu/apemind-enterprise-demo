@@ -183,8 +183,8 @@ services:
       test: ["CMD-SHELL", "bash /usr/share/elasticsearch/bin/init-es.sh check"]
       interval: 10s
       timeout: 5s
-      retries: 12  # 12 * 10s = 120s (2 minutes)
-      start_period: 30s  # Extra buffer for IK plugin download on first boot
+      retries: 18  # 18 * 10s = 180s (3 minutes)
+      start_period: 60s  # IK plugin download + install + ES reload on first boot can take 60-120s
     command: bash /usr/share/elasticsearch/bin/init-es.sh
     restart: on-failure
 
