@@ -14,7 +14,7 @@ services:
   # Application Services
   # ==============================================
   api: &api
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.16}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.20}
     container_name: apemind-api
     depends_on:
       redis:
@@ -56,7 +56,7 @@ services:
       start_period: 60s  # Give API time to run migrations before first check
 
   frontend:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.2.16}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.2.20}
     container_name: apemind-frontend
     depends_on:
       api:
@@ -85,7 +85,7 @@ services:
     restart: on-failure
 
   indexing-worker:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.16}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.2.20}
     container_name: apemind-indexing-worker
     depends_on:
       redis:
@@ -164,7 +164,7 @@ services:
       start_period: 10s
 
   es:
-    image: ${REGISTRY:-docker.io}/apecloud/elasticsearch:8.8.2
+    image: ${REGISTRY:-docker.io}/apecloud/elasticsearch:8.15.5
     container_name: apemind-es
     ports:
       - "${ES_HOST_PORT:-127.0.0.1:9200}:9200"
@@ -172,8 +172,9 @@ services:
       - "discovery.type=single-node"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
       - "xpack.security.enabled=false"
-      - "ES_REQUIRE_IK_PLUGIN=false"
-      - "ES_AUTO_INSTALL_IK=false"
+      - "ES_REQUIRE_IK_PLUGIN=true"
+      - "ES_AUTO_INSTALL_IK=true"
+      - "ES_IK_PLUGIN_URL=https://get.infini.cloud/elasticsearch/analysis-ik/8.15.5"
     volumes:
       - apemind-es-data:/usr/share/elasticsearch/data
       - ./scripts/init-es.sh:/usr/share/elasticsearch/bin/init-es.sh

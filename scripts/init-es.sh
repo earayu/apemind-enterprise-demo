@@ -38,7 +38,7 @@ fi
 # Check and install IK Analyzer if needed
 if require_ik_plugin && ! ik_plugin_installed; then
     if auto_install_ik_plugin; then
-        IK_PLUGIN_URL="${ES_IK_PLUGIN_URL:-https://get.infini.cloud/elasticsearch/analysis-ik/8.8.2}"
+        IK_PLUGIN_URL="${ES_IK_PLUGIN_URL:-https://get.infini.cloud/elasticsearch/analysis-ik/8.15.5}"
         echo "Installing IK Analyzer from ${IK_PLUGIN_URL}..."
         /usr/share/elasticsearch/bin/elasticsearch-plugin install -b "${IK_PLUGIN_URL}"
         if [ "$?" -ne 0 ]; then

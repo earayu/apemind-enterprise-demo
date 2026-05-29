@@ -73,10 +73,10 @@ no_proxy=localhost,127.0.0.1,::1
 
 **2.4 指定版本（可选）**
 
-默认使用 `v2.2.16`。如需切换版本，在启动命令前设置：
+默认使用 SG 当前版本 `v2.2.20`。如需切换版本，在启动命令前设置：
 
 ```bash
-export VERSION=v2.2.16
+export VERSION=v2.2.20
 ```
 
 ---
@@ -183,9 +183,9 @@ docker compose down
 # 重启
 docker compose down && docker compose up -d
 
-# 更新版本（示例升级到 v2.2.16）
+# 更新版本（示例升级到 v2.2.20）
 git pull
-export VERSION=v2.2.16
+export VERSION=v2.2.20
 docker compose pull
 docker compose down && docker compose up -d
 ```
