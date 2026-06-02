@@ -14,7 +14,7 @@ services:
   # Application Services
   # ==============================================
   api: &api
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.3}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.4}
     container_name: apemind-api
     depends_on:
       redis:
@@ -57,7 +57,7 @@ services:
       start_period: 60s  # Give API time to run migrations before first check
 
   frontend:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.3.3}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.3.4}
     container_name: apemind-frontend
     depends_on:
       api:
@@ -86,7 +86,7 @@ services:
     restart: on-failure
 
   indexing-worker:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.3}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.4}
     container_name: apemind-indexing-worker
     depends_on:
       redis:
