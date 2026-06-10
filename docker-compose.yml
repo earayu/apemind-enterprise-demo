@@ -301,6 +301,32 @@ services:
     restart: on-failure
     profiles: ["nebula"]
 
+  # ==============================================
+  # Slock Remote Agent (optional — profile "slock-agent")
+  # ==============================================
+  # Starts a containerised Slock daemon + Claude CLI that connects back to
+  # your Slock server.  Mount the Docker socket so the agent can run docker /
+  # docker compose commands against the host.
+  #
+  # Usage:
+  #   export SLOCK_API_KEY=sk_machine_xxx
+  #   docker compose --profile slock-agent up -d slock-agent
+  slock-agent:
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-latest}
+    container_name: apemind-slock-agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    environment:
+      - SLOCK_API_KEY=${SLOCK_API_KEY}
+      - SLOCK_SERVER_URL=${SLOCK_SERVER_URL:-https://api.slock.ai}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+    working_dir: /workspace
+    restart: unless-stopped
+    profiles: ["slock-agent"]
+
   nebula-storage-activator:
     image: vesoft/nebula-console:v3.8.0
     container_name: apemind-nebula-storage-activator
