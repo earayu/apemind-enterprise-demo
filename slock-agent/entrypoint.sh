@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+if [ "$#" -gt 0 ]; then
+  exec "$@"
+fi
+
 : "${SLOCK_API_KEY:?SLOCK_API_KEY environment variable is required}"
 
 exec npx --yes @slock-ai/daemon@latest \

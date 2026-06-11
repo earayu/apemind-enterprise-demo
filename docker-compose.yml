@@ -14,7 +14,7 @@ services:
   # Application Services
   # ==============================================
   api: &api
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.4}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.3}
     container_name: apemind-api
     depends_on:
       redis:
@@ -57,7 +57,7 @@ services:
       start_period: 60s  # Give API time to run migrations before first check
 
   frontend:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.3.4}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise-frontend:${VERSION:-v2.3.3}
     container_name: apemind-frontend
     depends_on:
       api:
@@ -86,7 +86,7 @@ services:
     restart: on-failure
 
   indexing-worker:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.4}
+    image: ${REGISTRY:-docker.io}/apecloud/apemind-enterprise:${VERSION:-v2.3.3}
     container_name: apemind-indexing-worker
     depends_on:
       redis:
@@ -304,7 +304,7 @@ services:
   # ==============================================
   # Slock Remote Agent (optional — profile "slock-agent")
   # ==============================================
-  # Starts a containerised Slock daemon + Claude CLI that connects back to
+  # Starts a containerised Slock daemon + Claude/Codex CLI that connects back to
   # your Slock server.  Mount the Docker socket so the agent can run docker /
   # docker compose commands against the host.
   #
@@ -312,7 +312,7 @@ services:
   #   export SLOCK_API_KEY=sk_machine_xxx
   #   docker compose --profile slock-agent up -d slock-agent
   slock-agent:
-    image: ${REGISTRY:-docker.io}/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-latest}
+    image: ${SLOCK_AGENT_REGISTRY:-docker.io}/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-latest}
     container_name: apemind-slock-agent
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -321,8 +321,12 @@ services:
       - SLOCK_API_KEY=${SLOCK_API_KEY}
       - SLOCK_SERVER_URL=${SLOCK_SERVER_URL:-https://api.slock.ai}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
     working_dir: /workspace
     restart: unless-stopped
     profiles: ["slock-agent"]

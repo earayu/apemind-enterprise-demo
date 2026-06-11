@@ -73,10 +73,10 @@ no_proxy=localhost,127.0.0.1,::1
 
 **2.4 指定版本（可选）**
 
-默认使用 SG 当前版本 `v2.3.4`。如需切换版本，在启动命令前设置：
+默认使用 SG 当前版本 `v2.3.3`。如需切换版本，在启动命令前设置：
 
 ```bash
-export VERSION=v2.3.4
+export VERSION=v2.3.3
 ```
 
 ---
@@ -194,6 +194,54 @@ docker compose up -d --force-recreate
 > ⚠️ 升级后如遇界面语言显示异常，清除浏览器缓存中的 `locale` cookie（或 F12 → Application → Clear site data）后刷新即可。
 
 > ⚠️ 大版本升级前请查阅 release note，可能包含数据库迁移步骤。
+
+---
+
+## 可选：启动远程 Slock Agent
+
+需要远程排查客户环境时，可以启动 `slock-agent` profile。容器会连接到 Slock Server，并挂载宿主机 Docker socket，因此 agent 可以在容器内执行宿主机的 `docker` / `docker compose` 诊断命令。
+
+> ⚠️ `/var/run/docker.sock` 等价于宿主机 root 级 Docker 控制权。只在受信任客户环境、受控 Slock Server 和已轮换的 API key 下使用。
+
+Daemon 模式：
+
+```bash
+SLOCK_API_KEY=<your-slock-machine-api-key> \
+SLOCK_SERVER_URL=https://api.slock.ai \
+ANTHROPIC_API_KEY=<your-deepseek-api-key> \
+ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic \
+ANTHROPIC_MODEL=deepseek-v4-pro \
+docker compose --profile slock-agent up -d slock-agent
+```
+
+交互式 Claude Code：
+
+```bash
+docker run -it --rm \
+  --name claude-deepseek \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)":/workspace \
+  -w /workspace \
+  -e ANTHROPIC_API_KEY=<your-deepseek-api-key> \
+  -e ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic \
+  -e ANTHROPIC_MODEL=deepseek-v4-pro \
+  apecloud/apemind-slock-agent:latest \
+  claude
+```
+
+交互式 Codex CLI：
+
+```bash
+docker run -it --rm \
+  --name codex-agent \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)":/workspace \
+  -w /workspace \
+  -e OPENAI_API_KEY=<your-openai-compatible-api-key> \
+  -e OPENAI_BASE_URL=<your-openai-compatible-base-url> \
+  apecloud/apemind-slock-agent:latest \
+  codex
+```
 
 ---
 
