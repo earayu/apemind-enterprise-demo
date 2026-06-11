@@ -8,6 +8,7 @@ volumes:
   apemind-nebula-storage-data: {}
   apemind-nebula-logs: {}
   apemind-shared-data: {}
+  slock-agent-pi-data: {}
 
 services:
   # ==============================================
@@ -304,12 +305,15 @@ services:
   # ==============================================
   # Slock Remote Agent (optional — profile "slock-agent")
   # ==============================================
-  # Starts a containerised Slock daemon + Claude/Codex CLI that connects back to
-  # your Slock server.  Mount the Docker socket so the agent can run docker /
-  # docker compose commands against the host.
+  # Starts a containerised Slock daemon + Pi runtime that connects back to your
+  # Slock server. Mount the Docker socket so the agent can run docker / docker
+  # compose commands against the host.
   #
   # Usage:
+  #   export SLOCK_AGENT_REGISTRY=ghcr.io
+  #   export SLOCK_AGENT_VERSION=pi-deepseek-20260611
   #   export SLOCK_API_KEY=sk_machine_xxx
+  #   export DEEPSEEK_API_KEY=sk_xxx
   #   docker compose --profile slock-agent up -d slock-agent
   slock-agent:
     image: ${SLOCK_AGENT_REGISTRY:-docker.io}/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-latest}
@@ -317,16 +321,13 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace
+      - slock-agent-pi-data:/root/.pi
     environment:
       - SLOCK_API_KEY=${SLOCK_API_KEY}
       - SLOCK_SERVER_URL=${SLOCK_SERVER_URL:-https://api.slock.ai}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
-      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - PI_SKIP_VERSION_CHECK=${PI_SKIP_VERSION_CHECK:-1}
+      - PI_TELEMETRY=${PI_TELEMETRY:-0}
     working_dir: /workspace
     restart: unless-stopped
     profiles: ["slock-agent"]

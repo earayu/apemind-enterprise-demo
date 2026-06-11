@@ -203,44 +203,42 @@ docker compose up -d --force-recreate
 
 > ⚠️ `/var/run/docker.sock` 等价于宿主机 root 级 Docker 控制权。只在受信任客户环境、受控 Slock Server 和已轮换的 API key 下使用。
 
-Daemon 模式：
+### 一条命令启动
 
 ```bash
+SLOCK_AGENT_REGISTRY=ghcr.io \
+SLOCK_AGENT_VERSION=pi-deepseek-20260611 \
 SLOCK_API_KEY=<your-slock-machine-api-key> \
 SLOCK_SERVER_URL=https://api.slock.ai \
-ANTHROPIC_API_KEY=<your-deepseek-api-key> \
-ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic \
-ANTHROPIC_MODEL=deepseek-v4-pro \
+DEEPSEEK_API_KEY=<your-deepseek-api-key> \
 docker compose --profile slock-agent up -d slock-agent
 ```
 
-交互式 Claude Code：
+### Slock Server 侧 Agent 配置
+
+启动容器后，在 Slock Server 创建或启动 agent 时使用：
+
+| 配置项 | 值 |
+|------|------|
+| Runtime | `Pi` |
+| Model | `deepseek/deepseek-v4-pro` |
+| Thinking | `high` |
+
+DeepSeek key 通过容器环境变量 `DEEPSEEK_API_KEY` 注入。镜像不包含任何 key。
+
+### 交互式 Pi 验证
+
+如需在客户机器上先验证 DeepSeek + Pi 是否可用：
 
 ```bash
 docker run -it --rm \
-  --name claude-deepseek \
+  --name pi-deepseek \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v "$(pwd)":/workspace \
   -w /workspace \
-  -e ANTHROPIC_API_KEY=<your-deepseek-api-key> \
-  -e ANTHROPIC_BASE_URL=https://api.deepseek.com/anthropic \
-  -e ANTHROPIC_MODEL=deepseek-v4-pro \
-  apecloud/apemind-slock-agent:latest \
-  claude
-```
-
-交互式 Codex CLI：
-
-```bash
-docker run -it --rm \
-  --name codex-agent \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v "$(pwd)":/workspace \
-  -w /workspace \
-  -e OPENAI_API_KEY=<your-openai-compatible-api-key> \
-  -e OPENAI_BASE_URL=<your-openai-compatible-base-url> \
-  apecloud/apemind-slock-agent:latest \
-  codex
+  -e DEEPSEEK_API_KEY=<your-deepseek-api-key> \
+  ghcr.io/apecloud/apemind-slock-agent:pi-deepseek-20260611 \
+  pi --provider deepseek --model deepseek-v4-pro --thinking high
 ```
 
 ---
