@@ -206,13 +206,13 @@ docker compose up -d --force-recreate
 ### 一条命令启动
 
 ```bash
-SLOCK_AGENT_REGISTRY=ghcr.io \
-SLOCK_AGENT_VERSION=pi-deepseek-20260611 \
 SLOCK_API_KEY=<your-slock-machine-api-key> \
-SLOCK_SERVER_URL=https://api.slock.ai \
 DEEPSEEK_API_KEY=<your-deepseek-api-key> \
 docker compose --profile slock-agent up -d slock-agent
 ```
+
+如需连接非默认 Slock Server，可额外设置 `SLOCK_SERVER_URL`。镜像默认使用
+`ghcr.io/apecloud/apemind-slock-agent:pi-deepseek-20260611`。
 
 ### Slock Server 侧 Agent 配置
 

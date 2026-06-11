@@ -310,13 +310,11 @@ services:
   # compose commands against the host.
   #
   # Usage:
-  #   export SLOCK_AGENT_REGISTRY=ghcr.io
-  #   export SLOCK_AGENT_VERSION=pi-deepseek-20260611
   #   export SLOCK_API_KEY=sk_machine_xxx
   #   export DEEPSEEK_API_KEY=sk_xxx
   #   docker compose --profile slock-agent up -d slock-agent
   slock-agent:
-    image: ${SLOCK_AGENT_REGISTRY:-docker.io}/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-latest}
+    image: ghcr.io/apecloud/apemind-slock-agent:${SLOCK_AGENT_VERSION:-pi-deepseek-20260611}
     container_name: apemind-slock-agent
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
