@@ -199,20 +199,32 @@ docker compose up -d --force-recreate
 
 ## 可选：启动远程 Slock Agent
 
-需要远程排查客户环境时，可以启动 `slock-agent` profile。容器会连接到 Slock Server，并挂载宿主机 Docker socket，因此 agent 可以在容器内执行宿主机的 `docker` / `docker compose` 诊断命令。
+需要远程排查客户环境时，可以用 `docker run` 启动一个 Slock Agent 容器。容器会连接到 Slock Server，并挂载宿主机 Docker socket 和当前目录，因此 agent 可以在容器内执行宿主机的 `docker` / `docker compose` 诊断命令、读写当前工作目录，并通过 host network 访问本机服务。
 
-> ⚠️ `/var/run/docker.sock` 等价于宿主机 root 级 Docker 控制权。只在受信任客户环境、受控 Slock Server 和已轮换的 API key 下使用。
+> ⚠️ `/var/run/docker.sock`、`--pid host` 和 `--privileged` 都是宿主机高权限能力。只在受信任客户环境、受控 Slock Server 和已轮换的 API key 下使用。
 
 ### 一条命令启动
 
 ```bash
-SLOCK_API_KEY=<your-slock-machine-api-key> \
-DEEPSEEK_API_KEY=<your-deepseek-api-key> \
-docker compose --profile slock-agent up -d slock-agent
+docker run --rm \
+  --name slock-agent \
+  --network host \
+  --pid host \
+  --privileged \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)":/workspace \
+  -w /workspace \
+  -v slock-agent-pi-data:/root/.pi \
+  -e DEEPSEEK_API_KEY=<your-deepseek-api-key> \
+  -e PI_SKIP_VERSION_CHECK=1 \
+  -e PI_TELEMETRY=0 \
+  ghcr.io/apecloud/slock-agent:latest \
+  slock-daemon \
+    --server-url https://api.slock.ai \
+    --api-key <your-slock-machine-api-key>
 ```
 
-如需连接非默认 Slock Server，可额外设置 `SLOCK_SERVER_URL`。镜像默认使用
-`ghcr.io/apecloud/apemind-slock-agent:pi-deepseek-20260611`。
+如需后台常驻，把 `--rm` 改成 `-d --restart unless-stopped`。如需读写其他目录，把对应宿主机目录额外挂到容器内。
 
 ### Slock Server 侧 Agent 配置
 
@@ -237,7 +249,7 @@ docker run -it --rm \
   -v "$(pwd)":/workspace \
   -w /workspace \
   -e DEEPSEEK_API_KEY=<your-deepseek-api-key> \
-  ghcr.io/apecloud/apemind-slock-agent:pi-deepseek-20260611 \
+  ghcr.io/apecloud/slock-agent:latest \
   pi --provider deepseek --model deepseek-v4-pro --thinking high
 ```
 
