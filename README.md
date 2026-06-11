@@ -218,13 +218,21 @@ docker run --rm \
   -e DEEPSEEK_API_KEY=<your-deepseek-api-key> \
   -e PI_SKIP_VERSION_CHECK=1 \
   -e PI_TELEMETRY=0 \
-  ghcr.io/apecloud/slock-agent:latest \
+  apecloud/slock-agent:latest \
   slock-daemon \
     --server-url https://api.slock.ai \
     --api-key <your-slock-machine-api-key>
 ```
 
 如需后台常驻，把 `--rm` 改成 `-d --restart unless-stopped`。如需读写其他目录，把对应宿主机目录额外挂到容器内。
+
+镜像会同步发布到三处：
+
+| Registry | Image |
+|------|------|
+| Docker Hub | `apecloud/slock-agent:latest` |
+| GHCR | `ghcr.io/apecloud/slock-agent:latest` |
+| 阿里云 ACR | `registry.cn-hangzhou.aliyuncs.com/apecloud/slock-agent:latest` |
 
 ### Slock Server 侧 Agent 配置
 
@@ -249,7 +257,7 @@ docker run -it --rm \
   -v "$(pwd)":/workspace \
   -w /workspace \
   -e DEEPSEEK_API_KEY=<your-deepseek-api-key> \
-  ghcr.io/apecloud/slock-agent:latest \
+  apecloud/slock-agent:latest \
   pi --provider deepseek --model deepseek-v4-pro --thinking high
 ```
 
