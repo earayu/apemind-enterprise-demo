@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Image tag (e.g. v1.0.0 or latest)'
+        description: 'Image tag (e.g. latest, v1.0.0)'
         required: true
         default: 'latest'
   push:
@@ -13,63 +13,53 @@ on:
     paths:
       - 'slock-agent/**'
 
+run-name: "Release slock-agent:${{ inputs.image_tag || 'latest' }}"
+
 permissions:
   contents: read
   packages: write
 
-env:
-  GHCR_IMAGE: ghcr.io/apecloud/slock-agent
-  DOCKERHUB_IMAGE: docker.io/apecloud/slock-agent
-  ALIYUN_REGISTRY: registry.cn-hangzhou.aliyuncs.com
-  ALIYUN_IMAGE: registry.cn-hangzhou.aliyuncs.com/apecloud/slock-agent
-
-# Required repository secrets:
-# DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, ALIYUN_REGISTRY_USERNAME,
-# ALIYUN_REGISTRY_PASSWORD
-
 jobs:
-  build-push:
+  image-tag:
     runs-on: ubuntu-latest
+    outputs:
+      tag-name: ${{ steps.tag.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Determine tag
+        id: tag
+        run: |
+          TAG="${{ inputs.image_tag || 'latest' }}"
+          echo "tag_name=${TAG}" >> "$GITHUB_OUTPUT"
+
+  release-dockerhub-aliyun:
+    name: release-dockerhub-aliyun
+    needs: [image-tag]
+    uses: apecloud/apecloud-cd/.github/workflows/release-image-cache-sync.yml@v0.1.93
+    with:
+      IMG: "apecloud/slock-agent"
+      VERSION: "${{ needs.image-tag.outputs.tag-name }}"
+      CONTEXT: "./slock-agent"
+      DOCKERFILE_PATH: "./slock-agent/Dockerfile"
+      REMOVE_PREFIX: false
+      APECD_REF: "v0.1.93"
+    secrets: inherit
+
+  sync-ghcr:
+    name: sync-ghcr
+    runs-on: ubuntu-latest
+    needs: [image-tag, release-dockerhub-aliyun]
+    steps:
+      - uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.PERSONAL_ACCESS_USER }}
+          password: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to Alibaba Cloud Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.ALIYUN_REGISTRY }}
-          username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
-          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
-
-      - uses: docker/setup-buildx-action@v3
-
-      - name: Determine image tag
-        id: tag
+      - name: Sync Docker Hub image to GHCR
         run: |
-          TAG="${{ inputs.image_tag || 'latest' }}"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: slock-agent/
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ env.GHCR_IMAGE }}:${{ steps.tag.outputs.tag }}
-            ${{ env.DOCKERHUB_IMAGE }}:${{ steps.tag.outputs.tag }}
-            ${{ env.ALIYUN_IMAGE }}:${{ steps.tag.outputs.tag }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          docker buildx imagetools create \
+            --tag ghcr.io/apecloud/slock-agent:${{ needs.image-tag.outputs.tag-name }} \
+            docker.io/apecloud/slock-agent:${{ needs.image-tag.outputs.tag-name }}

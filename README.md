@@ -232,7 +232,7 @@ docker run --rm \
 |------|------|
 | Docker Hub | `apecloud/slock-agent:latest` |
 | GHCR | `ghcr.io/apecloud/slock-agent:latest` |
-| 阿里云 ACR | `registry.cn-hangzhou.aliyuncs.com/apecloud/slock-agent:latest` |
+| 阿里云 ACR | `apecloud-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/slock-agent:latest` |
 
 ### Slock Server 侧 Agent 配置
 
