@@ -71,13 +71,16 @@ no_proxy=localhost,127.0.0.1,::1
 
 否则容器内组件（Qdrant、Redis、ES 等）会尝试通过代理访问本地地址，导致连接失败。
 
-**2.4 指定版本（可选）**
+**2.4 指定镜像源 / 版本（可选）**
 
-默认使用 SG 当前版本 `v2.3.30`。如需切换版本，在启动命令前设置：
+默认使用国内交付镜像源 `apecloud-registry.cn-zhangjiakou.cr.aliyuncs.com`，版本为 `v2.3.31`。如需切换镜像源或版本，在启动命令前设置：
 
 ```bash
-export VERSION=v2.3.30
+export REGISTRY=apecloud-registry.cn-zhangjiakou.cr.aliyuncs.com
+export VERSION=v2.3.31
 ```
+
+> Redis / Qdrant 当前未同步到 ApeCloud 阿里云镜像仓库，`docker-compose.yml` 中仍显式使用 Docker Hub 镜像；如客户环境无法访问 Docker Hub，请先配置企业镜像代理或替换为已验证的国内镜像。
 
 ---
 
