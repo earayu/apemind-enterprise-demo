@@ -30,6 +30,25 @@ RUN npm install -g --ignore-scripts \
     @earendil-works/pi-coding-agent@${PI_CODING_AGENT_VERSION} \
     && npm cache clean --force
 
+# POC 现场作业 Skill：构建时从 deploy 仓库拉最新版，预装到 Pi 的用户级技能目录
+# /root/.agents/skills（Pi 启动默认加载该目录，与 cwd 无关；刻意不放 /root/.pi 下，
+# 因为运行时 slock-agent-pi-data 卷挂在 /root/.pi，会把镜像内文件遮住）。
+# deploy 仓库是私有库：CI 构建需传 SKILLS_REPO_TOKEN（对 apecloud/aperag-enterprise-deploy
+# 只读即可）。SKILLS_REVISION 双重用途：钉版本 + 破层缓存——CI 应把它解析为 deploy 仓库
+# main 的当前 commit SHA 再传入，这样"每次 build 拉最新"才真正成立（固定传 main 字符串
+# 会命中 Docker 层缓存、拉不到新内容）。本地无 token 构建时跳过并告警，不阻断开发。
+ARG SKILLS_REPO_TOKEN
+ARG SKILLS_REVISION=main
+RUN if [ -n "$SKILLS_REPO_TOKEN" ]; then \
+      mkdir -p /root/.agents/skills/poc-onsite-ops \
+      && curl -fsSL -H "Authorization: token ${SKILLS_REPO_TOKEN}" \
+        "https://raw.githubusercontent.com/apecloud/aperag-enterprise-deploy/${SKILLS_REVISION}/.agents/skills/poc-onsite-ops/SKILL.md" \
+        -o /root/.agents/skills/poc-onsite-ops/SKILL.md \
+      && grep -q "^name: poc-onsite-ops" /root/.agents/skills/poc-onsite-ops/SKILL.md; \
+    else \
+      echo "WARN: SKILLS_REPO_TOKEN 未提供——本次构建不含 poc-onsite-ops skill（仅限本地开发构建）"; \
+    fi
+
 WORKDIR /workspace
 
 COPY entrypoint.sh /entrypoint.sh
